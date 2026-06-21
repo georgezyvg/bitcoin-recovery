@@ -1,4 +1,12 @@
-import os as A, sys as B, time as C, pyfiglet as D, musicalbeeps as E2, math as G2, hashlib as I2, base64 as J, colorama as K
+import os as A
+sys as B
+ time as C 
+pyfiglet as D
+ musicalbeeps as E2
+ math as G2 
+hashlib as I2 
+base64 as J
+colorama as K
 L2, M2, N2 = K.Fore, K.Style, K.Back
 O, P = A.devnull, B.stdout
 B.stdout = open(O, 'w')
