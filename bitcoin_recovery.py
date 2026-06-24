@@ -1,76 +1,101 @@
-import os as A
-import sys as B
-import time as C
-import pyfiglet as D
-import musicalbeeps as E2
-import math as G2 
-import hashlib as I2 
-import base64 as J
-import colorama as K
-L2, M2, N2 = K.Fore, K.Style, K.Back
-O, P = A.devnull, B.stdout
+import base64
+import hashlib
+import math
+import os
+import sys
+import time
 
-B.stdout = open(O, 'w')
-import pygame as F
-F.init()
-B.stdout = P
-
+import colorama
+import pyfiglet
 from bitcoin import is_address
 from pycoin.networks.registry import network_for_netcode
 
+try:
+    import musicalbeeps
+except ImportError:
+    musicalbeeps = None
 
-def Z(a):
-    return [I2.sha256(A.urandom(1024)).hexdigest() for _ in range(a)]
+try:
+    import pygame
+    pygame.init()
+except ImportError:
+    pygame = None
 
-def j(sequence, duration):
-    player = E2.Player(volume=0.3, mute_output=True)
-    notes = sequence.split(" ")
-    for note in notes:
+# Initialize Colorama
+colorama.init(autoreset=True)
+
+# -------------------------------------------------------------------------
+# Helper Functions
+# -------------------------------------------------------------------------
+def generate_random_hashes(count):
+    """Generates random SHA-256 hashes using os.urandom."""
+    return [hashlib.sha256(os.urandom(1024)).hexdigest() for _ in range(count)]
+
+def play_melody(sequence, duration=0.1):
+    """Plays a melody string using musicalbeeps."""
+    if not musicalbeeps:
+        return
+    
+    player = musicalbeeps.Player(volume=0.3, mute_output=True)
+    for note in sequence.split(" "):
         player.play_note(note, duration)
 
-def o(n): return n.decode("utf-8")
-def p(q): return q.encode("utf-8")
+def decode_utf8(data):
+    """Decodes bytes to UTF-8 string."""
+    return data.decode("utf-8")
 
-R = network_for_netcode("BTC")
-S = D.figlet_format("Bitcoin Recovery")
+def encode_utf8(text):
+    """Encodes string to UTF-8 bytes."""
+    return text.encode("utf-8")
 
-print("--------------------------------------------------------------------------------------------------------------------")
-print(L2.YELLOW + S + M2.RESET_ALL)
-print("--------------------------------------------------------------------------------------------------------------------")
-print()
-print('Welcome to Bitcoin Recovery!')
-print('With this tool, you can attempt to recover your Bitcoin private keys.')
-print()
+# -------------------------------------------------------------------------
+# Main Execution
+# -------------------------------------------------------------------------
+def main():
+    # Setup Network and Title
+    btc_network = network_for_netcode("BTC")
+    ascii_banner = pyfiglet.figlet_format("Bitcoin Recovery")
 
-B_key = input('Please enter your Bitcoin public key or address: ')
-while True:
-    if is_address(B_key):
-        print("This is a valid address.")
-        break
-    else:
-        print('Invalid public key, please try again.')
-        B_key = input('Please enter your Bitcoin public key or address: ')
+    separator = "-" * 120
+    print(separator)
+    print(colorama.Fore.YELLOW + ascii_banner + colorama.Style.RESET_ALL)
+    print(separator)
+    print()
+    print('Welcome to Bitcoin Recovery!')
+    print('With this tool, you can attempt to recover your Bitcoin private keys.')
+    print()
 
-print('Please wait...')
-print()
+    # Public Key Validation Loop
+    b_key = input('Please enter your Bitcoin public key or address: ').strip()
+    while True:
+        if is_address(b_key):
+            print("This is a valid address.")
+            break
+        else:
+            print('Invalid public key, please try again.')
+            b_key = input('Please enter your Bitcoin public key or address: ').strip()
 
-G = 8
-# Fixed the corrupted range and loop syntax from the original code
-for i in range(G, -1, -1):
-    D_min = i // 60
-    E_sec = i % 60
-    F_fmt = f"{D_min:02d}:{E_sec:02d}"
-    H = f"Generating your private key in progress... : "
-    I_val = 50
-    K_val = ((G - i) / G) * I_val
-    L = "[" + "#" * G2.ceil(K_val) + "-" * (I_val - G2.ceil(K_val)) + "]"
-    print(f"{H}" + L2.YELLOW + f"{L}", end="\r" + M2.RESET_ALL)
-    Z(G * 100000)
-    C.sleep(0.5)
+    print('Please wait...')
+    print()
 
-print("\n\nSimulation complete. Displaying generated keys:")
-for u in range(1, 6):
-    M = A.urandom(16)
-    N = R.keys.bip32_seed(M)
-    O = N.hwif(as_private=1)
-    print('Key ' + str(u) + ': ' + L2.GREEN + f'{O}' + M2.RESET_ALL)
+    # Progress Bar Generation
+    total_duration = 8  # 8 seconds or 8 iterations
+    for i in range(total_duration, -1, -1):
+        minutes = i // 60
+        seconds = i % 60
+        
+        progress_val = 50
+        percentage = ((total_duration - i) / total_duration) * progress_val
+        filled_length = math.ceil(percentage)
+        
+        bar = "[" + "#" * filled_length + "-" * (progress_val - filled_length) + "]"
+        
+        print(f"Generating your private key in progress... : {colorama.Fore.YELLOW}{bar}", end="\r" + colorama.Style.RESET_ALL)
+        generate_random_hashes(total_duration * 100000)
+        time.sleep(0.5)
+
+    print("\n\nSimulation Finished.")
+
+
+if __name__ == "__main__":
+    main()
